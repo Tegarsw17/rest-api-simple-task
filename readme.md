@@ -64,6 +64,28 @@ To access protected routes (e.g., creating tasks), you must include a valid toke
 
 This API uses PostgreSQL as the database. You can find the database schema in the `db` file.
 
+for creating table in the **begining** use this:
+
+```sql
+CREATE TABLE users (
+  id_user SERIAL PRIMARY KEY,
+  username VARCHAR(255),
+  password VARCHAR(255),
+  token VARCHAR(255)
+);
+```
+
+```sql
+CREATE TABLE tasks (
+  id_task SERIAL PRIMARY KEY,
+  title VARCHAR(255),
+  description VARCHAR(255),
+  status VARCHAR(255),
+  due_date date,
+  user_id VARCHAR(255)
+);
+```
+
 ## Error Handling
 
 The API provides detailed error messages in JSON format to help you identify and resolve any issues.
