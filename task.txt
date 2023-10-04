@@ -1,0 +1,55 @@
+validation:
+due date must in future
+max value title
+all musti
+--------------------------------
+POST /authenticate (done)
+
+body:
+username
+password
+
+reponse:
+token
+
+result ==> 
+- regis, login, logout
+- no duplicate username
+--------------------
+POST api/tasks (done)
+
+headers:
+token
+
+body:
+user_id
+title
+description
+due date
+
+response:
+-
+---------------------
+GET api/tasks (done)
+header: token
+response:
+- (all by id)
+---------------------
+GET api/taks/$id_task (done)
+header: token
+params: id_task
+response:
+- (only one)
+---------------------
+PUT api/taks/$id_task (done)
+header: token
+params: id_task
+body:
+title
+description
+status
+due date
+---------------------
+DELETE api/taks/$id_task (done)
+header: token
+params: id_task
