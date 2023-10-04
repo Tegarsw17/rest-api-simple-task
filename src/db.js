@@ -1,13 +1,12 @@
 const { Pool } = require('pg')
-const connectionLink =
-  'postgres://postgres.ayiuazpfqdmqpppuahpr:LabPGTegar003@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres'
+require('dotenv').config()
 
 const pool = new Pool({
-  host: 'db.ayiuazpfqdmqpppuahpr.supabase.co',
-  user: 'postgres',
-  password: 'LabPGTegar003',
-  database: 'postgres',
-  port: '5432',
+  host: process.env.HOST,
+  user: process.env.USER,
+  password: process.env.PASSWORD,
+  database: process.env.DATABASE,
+  port: process.env.PORT,
 })
 
 module.exports = pool
