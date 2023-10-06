@@ -2,6 +2,8 @@ const { v4: uuid } = require('uuid')
 const pool = require('../db')
 const allData = 'id_task, title, description, status, due_date, user_id'
 const noId = 'title, description, status, due_date'
+const message = require('../../response-helper/message.js').MESSAGE
+const responseHandler = require('../../response-helper/res-helper.js')
 
 class taskController {
   async createTask(req, res) {
@@ -9,7 +11,7 @@ class taskController {
       const payload = req.body
       // check user
       const id_task = uuid()
-      const token = req.headers.token
+      const token = req.headers.authorization
 
       const user = await pool.query(
         `SELECT id_user,username,token FROM users WHERE token=$1`,
@@ -29,16 +31,16 @@ class taskController {
           id_user,
         ]
       )
-      return res.status(200).json(task.rows[0])
+      return responseHandler.created(res, message('task').created, task.rows[0])
     } catch (e) {
       console.error(e.message)
-      res.status(500).json({ error: 'Server error' })
+      return responseHandler.internalError(res, message(e.message).errorMessage)
     }
   }
 
   async getAllTask(req, res) {
     try {
-      const token = req.headers.token
+      const token = req.headers.authorization
       const user = await pool.query(
         `SELECT id_user,username,token FROM users WHERE token=$1`,
         [token]
@@ -47,16 +49,16 @@ class taskController {
         `SELECT id_task,title,description,status,due_date FROM tasks WHERE user_id=$1`,
         [user.rows[0].id_user]
       )
-      return res.status(200).json(tasks.rows)
+      return responseHandler.ok(res, message('get data').success, tasks.rows)
     } catch (e) {
       console.error(e.message)
-      res.status(500).json({ error: 'Server error' })
+      return responseHandler.internalError(res, message(e.message).errorMessage)
     }
   }
 
   async getDetailTask(req, res) {
     try {
-      const token = req.headers.token
+      const token = req.headers.authorization
       const payloadParams = req.params
 
       const user = await pool.query(
@@ -67,17 +69,17 @@ class taskController {
         `SELECT id_task,title,description,status,due_date FROM tasks WHERE id_task=$1 AND user_id=$2`,
         [payloadParams.id, user.rows[0].id_user]
       )
-      console.log(typeof tasks)
-      return res.status(200).json({ data: tasks.rows })
+      // return res.status(200).json({ data: tasks.rows })
+      return responseHandler.ok(res, message('get data').success, tasks.rows)
     } catch (e) {
       console.error(e.message)
-      res.status(500).json({ error: 'Server error' })
+      return responseHandler.internalError(res, message(e.message).errorMessage)
     }
   }
 
   async updateDetailTask(req, res) {
     try {
-      const token = req.headers.token
+      const token = req.headers.authorization
       const payload = req.body
       const payloadParams = req.params
       const user = await pool.query(
@@ -101,17 +103,21 @@ class taskController {
             user.rows[0].id_user,
           ]
         )
-        return res.status(200).json(update.rows)
+        return responseHandler.ok(
+          res,
+          message('update').success,
+          update.rows[0]
+        )
       }
-      return res.status(404).json({ message: 'Data not found' })
+      return responseHandler.notFound(res, message('task').notFoundResource)
     } catch (e) {
       console.error(e.message)
-      res.status(500).json({ error: 'Server error' })
+      return responseHandler.internalError(res, message(e.message).errorMessage)
     }
   }
   async deleteTask(req, res) {
     try {
-      const token = req.headers.token
+      const token = req.headers.authorization
       const payloadParams = req.params
       const user = await pool.query(
         `SELECT id_user,username,token FROM users WHERE token=$1`,
@@ -122,12 +128,14 @@ class taskController {
         [payloadParams.id, user.rows[0].id_user]
       )
       if (deleteTask.rowCount) {
-        return res.status(200).json({ message: 'Task already delete' })
+        // return res.status(200).json({ message: 'Task already delete' })
+        return responseHandler.ok(res, message('delete task').success)
       }
-      return res.status(400).json({ message: 'There is no task' })
+      // return res.status(400).json({ message: 'There is no task' })
+      return responseHandler.notFound(res, message('task').notFoundResource)
     } catch (e) {
       console.error(e.message)
-      res.status(500).json({ error: 'Server error' })
+      return responseHandler.internalError(res, message(e.message).errorMessage)
     }
   }
 }

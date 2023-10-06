@@ -1,15 +1,24 @@
 const bcrypt = require('bcrypt')
 const { v4: uuid } = require('uuid')
 const pool = require('../db')
+const message = require('../../response-helper/message.js').MESSAGE
+const responseHandler = require('../../response-helper/res-helper.js')
 
 class userController {
   async createUser(req, res) {
     try {
       const payload = req.body
-      if (!payload.username || !payload.password) {
-        return res
-          .status(400)
-          .json({ message: 'Data yang dimasukan tidak lengkap' })
+      if (!payload.username) {
+        return responseHandler.badRequest(
+          res,
+          message('user').incompleteKeyOrValue
+        )
+      }
+      if (!payload.password) {
+        return responseHandler.badRequest(
+          res,
+          message('password').incompleteKeyOrValue
+        )
       }
       const getQuery = await pool.query(
         `SELECT username,password FROM users WHERE username=$1`,
@@ -23,12 +32,16 @@ class userController {
           'INSERT INTO users (id_user,username, password) VALUES ($1,$2,$3) RETURNING id_user, username',
           [payload.id_user, payload.username, payload.password]
         )
-        return res.status(201).json(task.rows)
+        return responseHandler.created(
+          res,
+          message('user').created,
+          task.rows[0]
+        )
       }
-      return res.status(400).json({ message: 'username already exist' })
+      return responseHandler.badRequest(res, message('user').duplicateData)
     } catch (e) {
       console.error(e.message)
-      return res.status(500).json({ error: 'Server error' })
+      return responseHandler.internalError(res, message(e.message).errorMessage)
     }
   }
 
@@ -45,40 +58,46 @@ class userController {
       )
       const alreadyLogin = task.rows[0].token
       if (alreadyLogin) {
-        return res.status(400).json({ message: 'you are already login' })
+        return responseHandler.badRequest(
+          res,
+          message('you are already login').errorMessage
+        )
       }
       if (isPasswordTrue) {
         const update = await pool.query(
           `UPDATE users SET token=$1 WHERE username=$2 RETURNING token`,
           [uuid(), payload.username]
         )
-        return res
-          .status(200)
-          .json({ message: 'Login Sukses', data: update.rows[0] })
+        return responseHandler.ok(res, message('login').success, update.rows[0])
       } else {
-        return res.status(400).json({ message: 'username atau password salah' })
+        return responseHandler.badRequest(
+          res,
+          message('username or password is wrong').errorMessage
+        )
       }
-      //   return res.status(201).json({ message: 'username atau password salah' })
     } catch (e) {
       console.error(e.message)
-      return res.status(500).json({ error: 'Server error' })
+      return responseHandler.internalError(res, message().serverError)
     }
   }
 
   async logoutUser(req, res) {
     try {
-      const token = req.headers.token
+      const token = req.headers.authorization
       if (token) {
         const update = await pool.query(
           `UPDATE users SET token=NULL WHERE token=$1`,
           [token]
         )
-        return res.status(200).json({ message: 'OK' })
+        return responseHandler.ok(res, message('logout').success)
       }
-      return res.status(401).json({ message: 'Unauthorized' })
+      return responseHandler.authenticationFailed(
+        res,
+        message('Unauthorized').errorMessage
+      )
     } catch (e) {
       console.error(e.message)
-      return res.status(500).json({ error: 'Server error' })
+      return responseHandler.internalError(res, message(e.message).errorMessage)
     }
   }
 }
