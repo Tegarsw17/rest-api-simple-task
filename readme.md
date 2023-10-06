@@ -58,11 +58,11 @@ The API is now running locally on `http://localhost:5000`. You can use tools lik
 
 ## Authentication
 
-To access protected routes (e.g., creating tasks), you must include a valid token in the `token` header.
+To access protected routes (e.g., creating tasks), you must include a valid token in the `authorization` header.
 
 ## Database
 
-This API uses PostgreSQL as the database. You can find the database schema in the `db` file.
+This API uses PostgreSQL as the database.
 
 for creating table in the **begining** use this:
 
